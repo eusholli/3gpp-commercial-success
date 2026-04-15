@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3GPP Commercial Success Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+  :root {
+    --page:     #f5f5f7;
+    --surface:  #ffffff;
+    --border:   rgba(0,0,0,0.08);
+    --divider:  rgba(0,0,0,0.06);
+    --text:     #1d1d1f;
+    --sub:      #6e6e73;
+    --faint:    #aeaeb2;
+
+    --blue:     #0071e3;
+    --green:    #28a745;
+    --amber:    #c67c00;
+    --red:      #d70015;
+
+    --gsm:      #b97200;
+    --umts:     #007aaa;
+    --lte:      #0055cc;
+    --nr:       #5e35b1;
+    --adv:      #c2185b;
+    --sixg:     #1b7d4b;
+
+    --score3:   #28a745;
+    --score2:   #c67c00;
+    --score1:   #d70015;
+
+    --radius:   14px;
+    --shadow:   0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; font-size: 16px; }
+
+  body {
+    background: var(--page);
+    color: var(--text);
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Wrapper ── */
+  .wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem 5rem;
+  }
+
+  /* ── Report header ── */
+  .report-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 3.5rem 0 2.5rem;
+    border-bottom: 1px solid var(--divider);
+    margin-bottom: 2.5rem;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .report-title-block h1 {
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    color: var(--text);
+  }
+
+  .report-title-block p {
+    margin-top: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--sub);
+    font-weight: 400;
+    max-width: 52ch;
+  }
+
+  .report-meta {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .report-meta .badge {
+    display: inline-block;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--blue);
+    background: rgba(0,113,227,0.08);
+    border: 1px solid rgba(0,113,227,0.15);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .report-meta .date {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--faint);
+    font-family: 'Geist Mono', monospace;
+  }
+
+  /* ── KPI row ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  @media (max-width: 860px) { .kpi-row { grid-template-columns: repeat(2,1fr); } }
+
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .kpi-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--sub);
+    margin-bottom: 0.5rem;
+  }
+
+  .kpi-value {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .kpi-value.accent  { color: var(--blue); }
+  .kpi-value.green   { color: var(--green); }
+  .kpi-value.amber   { color: var(--amber); }
+
+  .kpi-note {
+    margin-top: 0.45rem;
+    font-size: 0.75rem;
+    color: var(--sub);
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.6rem;
+  }
+
+  h2.chart-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+
+  .chart-subtitle {
+    font-size: 0.8rem;
+    color: var(--sub);
+    margin-bottom: 1.6rem;
+  }
+
+  /* ── Chart cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.8rem 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .grid-3-1 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 700px) { .grid-3-1 { grid-template-columns: 1fr; } }
+
+  /* ── Legend ── */
+  .gen-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    margin-top: 1.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--divider);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    color: var(--sub);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Tier legend pills ── */
+  .tier-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  .tier-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .tier-swatch {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .tier-info { flex: 1; }
+  .tier-name { font-size: 0.8rem; font-weight: 500; color: var(--text); }
+  .tier-count { font-size: 0.72rem; color: var(--sub); }
+
+  /* ── Data table ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  .data-table thead th {
+    text-align: left;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding: 0 0.75rem 0.7rem;
+    border-bottom: 1px solid var(--divider);
+    white-space: nowrap;
+  }
+
+  .data-table thead th:not(:first-child) { text-align: right; }
+
+  .data-table tbody tr {
+    border-bottom: 1px solid var(--divider);
+    transition: background 0.12s;
+  }
+
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: var(--page); }
+
+  .data-table td {
+    padding: 0.55rem 0.75rem;
+    color: var(--text);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .data-table td:not(:first-child) {
+    text-align: right;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.78rem;
+  }
+
+  .gen-pip {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+
+  .pct-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    justify-content: flex-end;
+  }
+
+  .pct-bar-bg {
+    width: 70px;
+    height: 5px;
+    background: var(--page);
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .pct-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s ease;
+  }
+
+  .pct-label {
+    min-width: 3.2em;
+    text-align: right;
+  }
+
+  /* ── Total row ── */
+  .data-table tfoot td {
+    padding: 0.7rem 0.75rem;
+    font-weight: 600;
+    border-top: 1px solid rgba(0,0,0,0.12);
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.78rem;
+    text-align: right;
+    color: var(--text);
+  }
+
+  .data-table tfoot td:first-child {
+    font-family: 'Geist', sans-serif;
+    text-align: left;
+  }
+
+  /* ── Divider + footer ── */
+  .report-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2rem 0;
+    border-top: 1px solid var(--divider);
+    margin-top: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .report-footer p {
+    font-size: 0.72rem;
+    color: var(--faint);
+    font-family: 'Geist Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ── Report header ── -->
+  <div class="report-header">
+    <div class="report-title-block">
+      <h1>3GPP Commercial Success<br>by Release</h1>
+      <p>Analysis of how effectively 3GPP standardisation translated into real-world commercial deployment, scored across 66 features from Phase 1 (1992) through Release 21 (est. 2029).</p>
+      <p style="margin-top: 0.8rem; font-size: 0.8rem; color: var(--sub);">
+        Inspired by <a href="https://github.com/lugasia/3gpp-skill" style="color: var(--blue); text-decoration: none;">lugasia/3gpp-skill</a>.
+        <br>
+        <em>Note: Findings are best effort, directional in nature, and represent the state of knowledge as of April 14, 2026.</em>
+      </p>
+    </div>
+    <div class="report-meta">
+      <div class="badge">Research Report</div>
+      <span class="date">April 2026</span>
+    </div>
+  </div>
+
+  <!-- ── KPI row ── -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Overall Success Rate</div>
+      <div class="kpi-value accent">44%</div>
+      <div class="kpi-note">88 of 198 possible points</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Features Scored</div>
+      <div class="kpi-value">66</div>
+      <div class="kpi-note">Across 23 releases, 6 generations</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Universal Successes</div>
+      <div class="kpi-value green">23</div>
+      <div class="kpi-note">Scored 3/3 — deployed globally</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Not Deployed</div>
+      <div class="kpi-value amber">24</div>
+      <div class="kpi-note">Scored 0/3 — commercial failure or pre-market</div>
+    </div>
+  </div>
+
+  <!-- ── Chart 1: % success per release ── -->
+  <div class="card">
+    <div class="section-label">Per Release</div>
+    <h2 class="chart-title">Commercial Success Rate by Release</h2>
+    <p class="chart-subtitle">Score achieved as a percentage of maximum possible (features × 3)</p>
+    <canvas id="chartSuccess" height="380"></canvas>
+    <div class="gen-legend" id="genLegend"></div>
+  </div>
+
+  <!-- ── Charts 2+3: generation bar + tier doughnut ── -->
+  <div class="grid-3-1">
+    <div class="card" style="margin-bottom:0">
+      <div class="section-label">By Generation</div>
+      <h2 class="chart-title">Success Rate by Generation</h2>
+      <p class="chart-subtitle">Aggregated across all releases within each mobile generation</p>
+      <canvas id="chartGeneration" height="220"></canvas>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="section-label">Score Distribution</div>
+      <h2 class="chart-title">Feature Tiers</h2>
+      <p class="chart-subtitle">All 61 features by commercial outcome</p>
+      <canvas id="chartTiers" height="160"></canvas>
+      <div class="tier-legend" style="margin-top:1.4rem">
+        <div class="tier-item">
+          <div class="tier-swatch" style="background:var(--score3)"></div>
+          <div class="tier-info">
+            <div class="tier-name">3/3 — Universal</div>
+            <div class="tier-count">23 features · deployed globally at scale</div>
+          </div>
+        </div>
+        <div class="tier-item">
+          <div class="tier-swatch" style="background:var(--score2)"></div>
+          <div class="tier-info">
+            <div class="tier-name">1/3 — Partial</div>
+            <div class="tier-count">19 features · commercial but limited reach</div>
+          </div>
+        </div>
+        <div class="tier-item">
+          <div class="tier-swatch" style="background:var(--score1)"></div>
+          <div class="tier-info">
+            <div class="tier-name">0/3 — Not Deployed</div>
+            <div class="tier-count">24 features · pre-commercial or abandoned</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Chart 4: features + scores per release ── -->
+  <div class="grid-2" style="margin-top:1rem">
+    <div class="card" style="margin-bottom:0">
+      <div class="section-label">Per Release</div>
+      <h2 class="chart-title">Features Standardised</h2>
+      <p class="chart-subtitle">Count of named features introduced per release</p>
+      <canvas id="chartFeatures" height="240"></canvas>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="section-label">Per Release</div>
+      <h2 class="chart-title">Score: Achieved vs Possible</h2>
+      <p class="chart-subtitle">Gap between standardised potential and commercial outcome</p>
+      <canvas id="chartScores" height="240"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Data table ── -->
+  <div class="card" style="margin-top:1rem; padding: 1.8rem 2rem">
+    <div class="section-label">Full Data</div>
+    <h2 class="chart-title">Release-by-Release Summary</h2>
+    <p class="chart-subtitle" style="margin-bottom:1.4rem">All scored releases with feature counts, score totals, and success rate</p>
+    <table class="data-table" id="dataTable">
+      <thead>
+        <tr>
+          <th>Release</th>
+          <th>Features</th>
+          <th>Score</th>
+          <th>Max</th>
+          <th>Success %</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+      <tfoot>
+        <tr>
+          <td style="font-family:'Geist',sans-serif; text-align:left; color:var(--text)">Total</td>
+          <td>66</td>
+          <td>88</td>
+          <td>198</td>
+          <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:44%;background:var(--blue)"></div></div><span class="pct-label">44%</span></div></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="report-footer">
+    <p>Sources: GSA Evolution Reports, GSMA Mobile IoT Data, Operator Announcements</p>
+    <p>Scores: 0 = not deployed · 1 = partial · 3 = universal commercial success</p>
+  </div>
+
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+const GEN = {
+  gsm:  { label: '2G GSM',      color: '#b97200' },
+  umts: { label: '3G UMTS',     color: '#007aaa' },
+  lte:  { label: '4G LTE',      color: '#0055cc' },
+  nr:   { label: '5G NR',       color: '#5e35b1' },
+  adv:  { label: '5G-Advanced', color: '#c2185b' },
+  sixg: { label: '6G',          color: '#1b7d4b' },
+};
+
+const releases = [
+  { label: 'GSM Ph.1',  gen: 'gsm',  f: 2, s: 6,  m: 6  },
+  { label: 'GSM Ph.2',  gen: 'gsm',  f: 2, s: 4,  m: 6  },
+  { label: 'Rel-96',    gen: 'gsm',  f: 1, s: 1,  m: 3  },
+  { label: 'Rel-97',    gen: 'gsm',  f: 1, s: 3,  m: 3  },
+  { label: 'Rel-98',    gen: 'gsm',  f: 1, s: 3,  m: 3  },
+  { label: 'Rel-99',    gen: 'umts', f: 1, s: 3,  m: 3  },
+  { label: 'Rel-4',     gen: 'umts', f: 3, s: 2,  m: 9  },
+  { label: 'Rel-5',     gen: 'umts', f: 2, s: 6,  m: 6  },
+  { label: 'Rel-6',     gen: 'umts', f: 2, s: 3,  m: 6  },
+  { label: 'Rel-7',     gen: 'umts', f: 3, s: 5,  m: 9  },
+  { label: 'Rel-8',     gen: 'lte',  f: 2, s: 6,  m: 6  },
+  { label: 'Rel-9',     gen: 'lte',  f: 3, s: 5,  m: 9  },
+  { label: 'Rel-10',    gen: 'lte',  f: 4, s: 5,  m: 12 },
+  { label: 'Rel-11',    gen: 'lte',  f: 1, s: 0,  m: 3  },
+  { label: 'Rel-12',    gen: 'lte',  f: 3, s: 6,  m: 9  },
+  { label: 'Rel-13',    gen: 'lte',  f: 5, s: 10, m: 15 },
+  { label: 'Rel-14',    gen: 'lte',  f: 3, s: 1,  m: 9  },
+  { label: 'Rel-15',    gen: 'nr',   f: 6, s: 12, m: 18 },
+  { label: 'Rel-16',    gen: 'nr',   f: 7, s: 5,  m: 21 },
+  { label: 'Rel-17',    gen: 'nr',   f: 4, s: 2,  m: 12 },
+  { label: 'Rel-18',    gen: 'adv',  f: 6, s: 0,  m: 18 },
+  { label: 'Rel-19',    gen: 'adv',  f: 2, s: 0,  m: 6  },
+  { label: 'Rel-20/21', gen: 'sixg', f: 2, s: 0,  m: 6  },
+];
+
+const genSummary = [
+  { label: '2G GSM',       pct: 81, gen: 'gsm'  },
+  { label: '3G UMTS',      pct: 58, gen: 'umts' },
+  { label: '4G LTE',       pct: 52, gen: 'lte'  },
+  { label: '5G NR',        pct: 37, gen: 'nr'   },
+  { label: '5G-Advanced',  pct: 0,  gen: 'adv'  },
+  { label: '6G',           pct: 0,  gen: 'sixg' },
+];
+
+// ── Chart defaults ────────────────────────────────────────────────────────────
+
+Chart.defaults.color = '#6e6e73';
+Chart.defaults.font.family = "'Geist', -apple-system, sans-serif";
+Chart.defaults.font.size = 11.5;
+Chart.defaults.plugins.legend.display = false;
+
+const grid  = 'rgba(0,0,0,0.055)';
+const ticks = { color: '#aeaeb2' };
+
+const tooltip = {
+  backgroundColor: '#1d1d1f',
+  titleColor: '#f5f5f7',
+  bodyColor: '#aeaeb2',
+  borderColor: 'rgba(255,255,255,0.08)',
+  borderWidth: 1,
+  padding: 10,
+  cornerRadius: 8,
+};
+
+// ── Chart 1: horizontal bar % success ────────────────────────────────────────
+
+new Chart(document.getElementById('chartSuccess'), {
+  type: 'bar',
+  data: {
+    labels: releases.map(r => r.label),
+    datasets: [{
+      data: releases.map(r => +(r.s / r.m * 100).toFixed(1)),
+      backgroundColor: releases.map(r => GEN[r.gen].color + '22'),
+      borderColor:     releases.map(r => GEN[r.gen].color),
+      borderWidth: 1.5,
+      borderRadius: 4,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    animation: { duration: 700, easing: 'easeOutQuart' },
+    plugins: {
+      tooltip: {
+        ...tooltip,
+        callbacks: {
+          label: ctx => ` ${ctx.raw}%  (${releases[ctx.dataIndex].s} / ${releases[ctx.dataIndex].m} pts, ${releases[ctx.dataIndex].f} features)`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: grid, drawBorder: false },
+        border: { display: false },
+        min: 0, max: 100,
+        ticks: { ...ticks, callback: v => v + '%' }
+      },
+      y: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { ...ticks, font: { size: 11 } }
+      }
+    }
+  }
+});
+
+// ── Generation legend ─────────────────────────────────────────────────────────
+
+const genLegend = document.getElementById('genLegend');
+Object.entries(GEN).forEach(([, g]) => {
+  genLegend.innerHTML += `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${g.color}"></div>
+      ${g.label}
+    </div>`;
+});
+
+// ── Chart 2: generation bar ───────────────────────────────────────────────────
+
+new Chart(document.getElementById('chartGeneration'), {
+  type: 'bar',
+  data: {
+    labels: genSummary.map(g => g.label),
+    datasets: [{
+      data: genSummary.map(g => g.pct),
+      backgroundColor: genSummary.map(g => GEN[g.gen].color + '22'),
+      borderColor:     genSummary.map(g => GEN[g.gen].color),
+      borderWidth: 1.5,
+      borderRadius: 5,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    animation: { duration: 700, easing: 'easeOutQuart' },
+    plugins: {
+      tooltip: {
+        ...tooltip,
+        callbacks: { label: ctx => ` ${ctx.raw}% commercial success` }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: grid, drawBorder: false },
+        border: { display: false },
+        min: 0, max: 100,
+        ticks: { ...ticks, callback: v => v + '%' }
+      },
+      y: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { ...ticks, font: { size: 11.5 } }
+      }
+    }
+  }
+});
+
+// ── Chart 3: doughnut tiers ───────────────────────────────────────────────────
+
+new Chart(document.getElementById('chartTiers'), {
+  type: 'doughnut',
+  data: {
+    labels: ['3/3 Universal', '1/3 Partial', '0/3 Not Deployed'],
+    datasets: [{
+      data: [23, 19, 24],
+      backgroundColor: ['#28a74520', '#c67c0020', '#d7001520'],
+      borderColor:     ['#28a745',   '#c67c00',   '#d70015'  ],
+      borderWidth: 2,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    cutout: '72%',
+    responsive: true,
+    animation: { animateRotate: true, duration: 900 },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        ...tooltip,
+        callbacks: {
+          label: ctx => ` ${ctx.raw} features (${(ctx.raw/66*100).toFixed(0)}%)`
+        }
+      }
+    }
+  }
+});
+
+// ── Chart 4: feature count ────────────────────────────────────────────────────
+
+new Chart(document.getElementById('chartFeatures'), {
+  type: 'bar',
+  data: {
+    labels: releases.map(r => r.label),
+    datasets: [{
+      data: releases.map(r => r.f),
+      backgroundColor: releases.map(r => GEN[r.gen].color + '22'),
+      borderColor:     releases.map(r => GEN[r.gen].color),
+      borderWidth: 1.5,
+      borderRadius: 4,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    animation: { duration: 700, easing: 'easeOutQuart' },
+    plugins: {
+      tooltip: {
+        ...tooltip,
+        callbacks: { label: ctx => ` ${ctx.raw} features` }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { ...ticks, font: { size: 9.5 }, maxRotation: 45 }
+      },
+      y: {
+        grid: { color: grid, drawBorder: false },
+        border: { display: false },
+        ticks: { ...ticks, stepSize: 1 }
+      }
+    }
+  }
+});
+
+// ── Chart 5: stacked score vs max ─────────────────────────────────────────────
+
+new Chart(document.getElementById('chartScores'), {
+  type: 'bar',
+  data: {
+    labels: releases.map(r => r.label),
+    datasets: [
+      {
+        label: 'Achieved',
+        data: releases.map(r => r.s),
+        backgroundColor: releases.map(r => GEN[r.gen].color + '55'),
+        borderColor:     releases.map(r => GEN[r.gen].color),
+        borderWidth: 1.5,
+        borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+        borderSkipped: 'bottom',
+        stack: 'a',
+      },
+      {
+        label: 'Gap',
+        data: releases.map(r => r.m - r.s),
+        backgroundColor: 'rgba(0,0,0,0.04)',
+        borderColor: 'rgba(0,0,0,0.06)',
+        borderWidth: 1,
+        borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+        borderSkipped: 'bottom',
+        stack: 'a',
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    animation: { duration: 700, easing: 'easeOutQuart' },
+    plugins: {
+      legend: {
+        display: true,
+        labels: { color: '#aeaeb2', font: { size: 10.5 }, boxWidth: 10, boxHeight: 10, padding: 16 }
+      },
+      tooltip: {
+        ...tooltip,
+        callbacks: {
+          label: ctx => {
+            if (ctx.datasetIndex === 0) return ` Achieved: ${ctx.raw} pts`;
+            return ` Gap: ${ctx.raw} pts unrealised`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        grid: { display: false },
+        border: { display: false },
+        ticks: { ...ticks, font: { size: 9.5 }, maxRotation: 45 }
+      },
+      y: {
+        stacked: true,
+        grid: { color: grid, drawBorder: false },
+        border: { display: false },
+        ticks
+      }
+    }
+  }
+});
+
+// ── Data table ────────────────────────────────────────────────────────────────
+
+const tbody = document.getElementById('tableBody');
+releases.forEach(r => {
+  const pct = +(r.s / r.m * 100).toFixed(0);
+  const c   = GEN[r.gen].color;
+  tbody.innerHTML += `
+    <tr>
+      <td><span class="gen-pip" style="background:${c}"></span>${r.label}</td>
+      <td>${r.f}</td>
+      <td>${r.s}</td>
+      <td>${r.m}</td>
+      <td>
+        <div class="pct-bar-wrap">
+          <div class="pct-bar-bg">
+            <div class="pct-bar-fill" style="width:${pct}%;background:${c}"></div>
+          </div>
+          <span class="pct-label">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+});
+</script>
+</body>
+</html>
